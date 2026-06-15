@@ -3,12 +3,14 @@ import { pizzaData } from '../data/pizzaData'
 import { useAuth } from '../context/AuthContext'
 const Home = () => {
   const { user } = useAuth()
-  console.log(user, 'user')
   const [userOrder, setUserOrder] = useState({
     userName: user.name,
     pizzas: [
+      // { showToppings: false, showCrust: false },
       // { pizza: name,
-      // toppings : toppings,
+      // crust: crust,
+      // toppings : [],
+      // sides : [],
       // price: price
       //quantity: quantity}
     ],
@@ -26,6 +28,8 @@ const Home = () => {
             pizza: name,
             price,
             quantity: 1,
+            showCrust: true,
+            // showToppings: false,
           },
         ],
         total: prev.total + price,
@@ -69,11 +73,37 @@ const Home = () => {
     })
   }
 
-  // console.log(userOrder, 'userOrder')
+  // {
+  //   pizza,
+  //   basePrice,
+  //   crust,
+  //   toppings,
+  //   sides,
+  //   quantity,
+  // }
+  const handleCrustChange = (e, name, crust) => {
+    setUserOrder((prev) => {
+      const existingPizza = prev.pizzas?.find((item) => item.pizza === name)
+      if (existingPizza) {
+        return {
+          ...prev,
+          pizzas: prev.pizzas.map((item) =>
+            item.pizza === name ? { ...item, crust: crust } : item,
+          ),
+        }
+      }
+    })
+  }
+
+  console.log(userOrder, 'userOrder')
+  const crustOptions = [
+    { name: 'Thin Crust', price: 0 },
+    { name: 'Pan Crust', price: 40 },
+    { name: 'Cheese Burst', price: 80 },
+  ]
 
   return (
     <main className='min-h-screen bg-gray-50'>
-      {/* Hero Section */}
       <section className='bg-linear-to-r from-red-600 via-orange-500 to-yellow-400 text-white'>
         <div className='mx-auto max-w-7xl px-6 py-20 text-center'>
           <h1 className='mb-4 text-5xl font-extrabold md:text-6xl'>
@@ -85,10 +115,7 @@ const Home = () => {
             right to your doorstep.
           </p>
 
-          <button
-            aria-label='Browse pizza menu'
-            className='mt-8 rounded-lg bg-white px-6 py-3 font-semibold text-red-600 transition hover:scale-105 hover:shadow-lg'
-          >
+          <button className='mt-8 rounded-lg bg-white px-6 py-3 font-semibold text-red-600 transition hover:scale-105 hover:shadow-lg'>
             Explore Menu
           </button>
         </div>
@@ -109,77 +136,87 @@ const Home = () => {
               key={pizza.id}
               className='overflow-hidden rounded-2xl bg-white shadow-md transition hover:-translate-y-1 hover:shadow-xl'
             >
-              <img
-                src={pizza.image}
-                alt={`${pizza.name} pizza`}
-                className='h-60 w-full object-cover'
-              />
-
-              <div className='p-6'>
-                <h3 className='text-2xl font-bold text-gray-900'>
-                  {pizza.name}
-                </h3>
-
-                <p className='mt-3 text-gray-600'>{pizza.description}</p>
-
-                <div className='mt-6 flex items-center justify-between'>
-                  <span className='text-2xl font-bold text-red-600'>
-                    ₹{pizza.price}
-                  </span>
-                  {
-                    // userOrder?.pizzas?.find(
-                    //   (item) => item.pizza === pizza.name,
-                    // ) &&
-                    userOrder?.pizzas?.find(
-                      (item) =>
-                        item.pizza === pizza.name && item.quantity !== 0,
-                    ) ? (
-                      <div className='flex items-center gap-1'>
-                        <button
-                          onClick={(e) =>
-                            decreaseQuantity(e, pizza.name, pizza.price)
-                          }
-                          aria-label={`Decrease quantity of `}
-                          className='flex h-6 w-6 items-center justify-center rounded-md border hover:bg-gray-100'
-                        >
-                          -
-                        </button>
-
-                        {userOrder?.pizzas?.map(
-                          (item, index) =>
-                            item.pizza === pizza.name && (
-                              <span
-                                key={index}
-                                className='min-w-6 text-center font-medium'
-                              >
-                                {item.quantity}
-                              </span>
+              {userOrder.pizzas.find(
+                (item) => item.pizza === pizza.name && item.showCrust,
+              ) ? (
+                <section className='p-6'>
+                  <h3 className='text-2xl font-bold text-gray-900'>
+                    Select Crust for {pizza.name}
+                  </h3>
+                  <div className='space-y-2'>
+                    {crustOptions.map((crust) => (
+                      <label
+                        key={crust.name}
+                        className='flex cursor-pointer items-center justify-between rounded-lg border p-3 hover:bg-gray-50'
+                      >
+                        <div className='flex items-center gap-3'>
+                          <input
+                            onChange={(e) =>
+                              handleCrustChange(e, pizza.name, crust)
+                            }
+                            type='radio'
+                            value={crust.name}
+                            name='crust'
+                          />
+                          <span>{crust.name}</span>
+                        </div>
+                        <span className='font-medium text-green-600'>
+                          +₹{crust.price}
+                        </span>
+                      </label>
+                    ))}
+                    <p
+                      onClick={() =>
+                        setUserOrder((prev) => {
+                          return {
+                            ...prev,
+                            pizzas: prev.pizzas.map((item) =>
+                              item.pizza === pizza.name
+                                ? {
+                                    ...item,
+                                    showToppings: true,
+                                    showCrust: false,
+                                  }
+                                : item,
                             ),
-                        )}
-
-                        <button
-                          onClick={(e) =>
-                            increaseQuantity(e, pizza.name, pizza.price)
                           }
-                          className='flex h-6 w-6 items-center justify-center rounded-md border hover:bg-gray-100'
-                        >
-                          +
-                        </button>
-                      </div>
-                    ) : (
+                        })
+                      }
+                    >
+                      Procide to add Crust
+                    </p>
+                  </div>
+                </section>
+              ) : (
+                <>
+                  <img
+                    src={pizza.image}
+                    alt={`${pizza.name} pizza`}
+                    className='h-60 w-full object-cover'
+                  />
+                  <div className='p-4'>
+                    <h3 className='text-2xl font-bold text-gray-900'>
+                      {pizza.name}
+                    </h3>
+                    <p className='mt-3 text-gray-600'>{pizza.description}</p>
+                  </div>
+                  <div className='p-4 pt-0'>
+                    <div className=' flex items-center justify-between'>
+                      <span className='text-2xl font-bold text-red-600'>
+                        ₹{pizza.price}
+                      </span>
                       <button
-                        aria-label={`Add ${pizza.name} to cart`}
                         onClick={(e) =>
                           handleAddToCart(e, pizza.name, pizza.price)
                         }
                         className='rounded-lg bg-red-600 px-4 py-2 font-medium text-white transition hover:bg-red-700'
                       >
-                        Add to Cart
+                        Add & Customize
                       </button>
-                    )
-                  }
-                </div>
-              </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </article>
           ))}
         </div>
@@ -216,10 +253,7 @@ const Home = () => {
                     <span>₹399</span>
                   </div>
 
-                  <button
-                    aria-label='Proceed to checkout'
-                    className='mt-4 w-full rounded-lg bg-green-600 px-4 py-3 font-semibold text-white transition hover:bg-green-700'
-                  >
+                  <button className='mt-4 w-full rounded-lg bg-green-600 px-4 py-3 font-semibold text-white transition hover:bg-green-700'>
                     Checkout
                   </button>
                 </div>
